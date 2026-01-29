@@ -27,18 +27,6 @@ config MY_APP
 	help
 		enable application
 
-config NPU_WIDTH
-	int "Width of neural network input image"
-	default 224
-	help
-		Width of neural network input image
-
-config NPU_HEIGHT
-	int "Height of neural network input image"
-	default 224
-	help
-		Height of neural network input image
-
 endmenu
 
 source "Kconfig.zephyr"

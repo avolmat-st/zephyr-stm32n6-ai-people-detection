@@ -24,7 +24,8 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(app LANGUAGES C)
 
 target_include_directories(app PRIVATE inc Model)
-target_sources(app PRIVATE src/main.c src/model.c Model/network.c)
+target_sources(app PRIVATE src/main.c src/model.c Model/network.c Model/stai_network.c src/npu_cache_hack.c
+                           src/zephyr_logo.c)
 
 # lib_vision_models_pp
 target_include_directories(app PRIVATE ../Lib/lib_vision_models_pp/lib_vision_models_pp/Inc
@@ -49,7 +50,7 @@ target_compile_definitions(app PRIVATE LL_ATON_PLATFORM=LL_ATON_PLAT_STM32N6
 
 target_include_directories(app PRIVATE ../Lib/AI_Runtime/Inc
                            ../Lib/AI_Runtime/Npu/ll_aton
-                           ../Lib/AI_Runtime/Npu/Devices/STM32N6XX)
+                           ../Lib/AI_Runtime/Npu/Devices/STM32N6xx)
 
 target_sources(app PRIVATE ../Lib/AI_Runtime/Npu/ll_aton/ll_aton.c
                ../Lib/AI_Runtime/Npu/ll_aton/ll_aton_osal_zephyr.c
@@ -58,13 +59,16 @@ target_sources(app PRIVATE ../Lib/AI_Runtime/Npu/ll_aton/ll_aton.c
                ../Lib/AI_Runtime/Npu/ll_aton/ll_aton_lib_sw_operators.c
                ../Lib/AI_Runtime/Npu/ll_aton/ll_aton_rt_main.c
                ../Lib/AI_Runtime/Npu/ll_aton/ll_aton_runtime.c
+               ../Lib/AI_Runtime/Npu/ll_aton/ll_aton_cipher.c
+               ../Lib/AI_Runtime/Npu/ll_aton/ll_aton_stai_internal.c
                ../Lib/AI_Runtime/Npu/ll_aton/ll_aton_util.c
                ../Lib/AI_Runtime/Npu/ll_aton/ll_sw_float.c
                ../Lib/AI_Runtime/Npu/ll_aton/ll_sw_integer.c
                ../Lib/AI_Runtime/Npu/ll_aton/ecloader.c
-               ../Lib/AI_Runtime/Npu/Devices/STM32N6XX/npu_cache.c
-               ../Lib/AI_Runtime/Npu/Devices/STM32N6XX/mcu_cache.c)
+# temporary disable npu_cache.c which is replace by npu_cache_hack.c due to bad header inclusion order
+#               ../Lib/AI_Runtime/Npu/Devices/STM32N6xx/npu_cache.c
+               ../Lib/AI_Runtime/Npu/Devices/STM32N6xx/mcu_cache.c)
 
 target_link_directories(app PUBLIC ../Lib/AI_Runtime/Lib/GCC/ARMCortexM55)
 
-target_link_libraries(app PRIVATE :NetworkRuntime1020_CM55_GCC.a)
+target_link_libraries(app PRIVATE :NetworkRuntime1100_CM55_GCC.a)

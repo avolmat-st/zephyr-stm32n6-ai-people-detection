@@ -30,6 +30,7 @@
 #include <stdarg.h>
 
 #include "model.h"
+#include "stai_network.h"
 
 LOG_MODULE_REGISTER(main);
 
@@ -37,10 +38,18 @@ LOG_MODULE_REGISTER(main);
 #define DISPLAY_HEIGHT DT_PROP(DT_CHOSEN(zephyr_display), height)
 #define DISPLAY_BPP 2
 
-#define NN_WIDTH CONFIG_NPU_WIDTH
-#define NN_HEIGHT CONFIG_NPU_HEIGHT
+#define NN_WIDTH STAI_NETWORK_IN_1_WIDTH
+#define NN_HEIGHT STAI_NETWORK_IN_1_HEIGHT
 #define NN_BPP 3
 #define NPU_BUFFER_POOL_ALIGN 32
+
+/* Tune ui layout */
+#define APP_DRAW_INF_TIME 0
+#define APP_DRAW_INF_FPS 1
+#define APP_DRAW_CPU_LOAD 0
+#define APP_DRAW_LOGO 1
+
+LV_IMAGE_DECLARE(zephyr_logo);
 
 static struct k_thread nn_thread;
 static K_THREAD_STACK_DEFINE(nn_thread_stack, 4096);
@@ -93,6 +102,7 @@ static void decorate_canvas(lv_obj_t * canvas)
 {
 	int latest_inference_time = model_get_latest_inference_time();
 	const lv_font_t *font = &lv_font_unscii_16;
+	lv_draw_image_dsc_t idsc;
 	lv_draw_rect_dsc_t rdsc;
 	struct dbox boxes[10];
 	lv_area_t coords;
@@ -108,23 +118,42 @@ static void decorate_canvas(lv_obj_t * canvas)
 
 	lv_canvas_init_layer(canvas, &layer);
 	/* Draw banner */
-	print_text(&layer, 0, 0, LV_TEXT_ALIGN_CENTER, "People Detection demo");
+	print_text(&layer, 0, 0, LV_TEXT_ALIGN_CENTER, "YoloX People Detection");
 	print_text(&layer, 0, font->line_height, LV_TEXT_ALIGN_CENTER, "Powered by zephyr OS %d.%d.%d",
 		   SYS_KERNEL_VER_MAJOR(ver), SYS_KERNEL_VER_MINOR(ver), SYS_KERNEL_VER_PATCHLEVEL(ver));
 
 	/* Draw inference time */
-	print_text(&layer, 0, DISPLAY_HEIGHT - font->line_height * 3, LV_TEXT_ALIGN_LEFT, "Inference %d ms",
-		   latest_inference_time);
-	latest_inference_time = latest_inference_time ? latest_inference_time : 1;
-	print_text(&layer, 0, DISPLAY_HEIGHT - font->line_height * 2, LV_TEXT_ALIGN_LEFT, "Fps       %d",
-		   1000 / latest_inference_time);
+	if (APP_DRAW_INF_TIME) {
+		print_text(&layer, 0, DISPLAY_HEIGHT - font->line_height * 3, LV_TEXT_ALIGN_LEFT, "Inference %d ms",
+			   latest_inference_time);
+	}
+	/* Draw inference fps */
+	if (APP_DRAW_INF_FPS) {
+		latest_inference_time = latest_inference_time ? latest_inference_time : 1;
+		print_text(&layer, 0, DISPLAY_HEIGHT - font->line_height * 2, LV_TEXT_ALIGN_LEFT, "Fps       %d",
+			   1000 / latest_inference_time);
+	}
+	/* Draw cpu load */
 #ifdef CONFIG_CPU_LOAD
-	load = cpu_load_get(1);
-	print_text(&layer, 0, DISPLAY_HEIGHT - font->line_height * 1, LV_TEXT_ALIGN_LEFT, "cpu load  %d.%d%%",
-		   load / 10, load % 10);
+	if (APP_DRAW_CPU_LOAD) {
+		load = cpu_load_get(1);
+		print_text(&layer, 0, DISPLAY_HEIGHT - font->line_height * 1, LV_TEXT_ALIGN_LEFT, "cpu load  %d.%d%%",
+			   load / 10, load % 10);
+	}
 #else
 	(void)load;
 #endif
+
+	/* Draw logo */
+	if (APP_DRAW_LOGO) {
+		lv_draw_image_dsc_init(&idsc);
+		idsc.src = &zephyr_logo;
+		coords.x1 = DISPLAY_WIDTH - zephyr_logo.header.w - 10;
+		coords.y1 = DISPLAY_HEIGHT - zephyr_logo.header.h - 10;
+		coords.x2 = coords.x1 + zephyr_logo.header.w - 1;
+		coords.y2 = coords.y1 + zephyr_logo.header.h - 1;
+		lv_draw_image(&layer, &idsc, &coords);
+	}
 
 	/* Draw boxes */
 	lv_draw_rect_dsc_init(&rdsc);

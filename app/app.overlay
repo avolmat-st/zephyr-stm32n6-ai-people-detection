@@ -35,7 +35,7 @@
 // Temporary patch that allows to turn on cache on psram
 // Remove this when merge upstream
 &psram {
-	/* Prevent access to the last 32bytes of the memory-mapped device */
-	reg = <0x90000000 (DT_SIZE_M(32) - 32)>;
+	/* Let last 8 Mbytes for Model usage */
+	reg = <0x90000000 (DT_SIZE_M(24))>;
 	zephyr,memory-attr = <DT_MEM_ARM(ATTR_MPU_RAM)>;
 };
