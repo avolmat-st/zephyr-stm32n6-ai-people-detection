@@ -17,15 +17,14 @@
  */
 
 #include <zephyr/kernel.h>
-#include <zephyr/debug/cpu_load.h>
 #include <zephyr/drivers/video.h>
 #include <zephyr/drivers/display.h>
 #include <zephyr/sys/__assert.h>
+#include <zephyr/sys/cpu_load.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/util.h>
 
 #include <lvgl.h>
-#include <font/lv_font.h>
 
 #include <stdarg.h>
 
