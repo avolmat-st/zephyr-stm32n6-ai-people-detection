@@ -35,11 +35,9 @@ LOG_MODULE_REGISTER(main);
 
 #define DISPLAY_WIDTH DT_PROP(DT_CHOSEN(zephyr_display), width)
 #define DISPLAY_HEIGHT DT_PROP(DT_CHOSEN(zephyr_display), height)
-#define DISPLAY_BPP 2
 
 #define NN_WIDTH STAI_NETWORK_IN_1_WIDTH
 #define NN_HEIGHT STAI_NETWORK_IN_1_HEIGHT
-#define NN_BPP 3
 #define NPU_BUFFER_POOL_ALIGN 32
 
 /* Tune ui layout */
@@ -237,7 +235,6 @@ static int video_alloc_and_queue_buffers(const struct device *const video_dev, s
 static int video_main_setup(const struct device *const video_dev, uint32_t sensor_width, uint32_t sensor_height)
 {
 	struct video_format fmt;
-	size_t bsize;
 	int ret;
 
 	/* setup crop, compose and output */
@@ -248,13 +245,11 @@ static int video_main_setup(const struct device *const video_dev, uint32_t senso
 	fmt.pixelformat = VIDEO_FOURCC_FROM_STR("RGBP");
 	fmt.width = DISPLAY_WIDTH;
 	fmt.height = DISPLAY_HEIGHT;
-	fmt.pitch = fmt.width * DISPLAY_BPP;
 	ret = video_set_format(video_dev, &fmt);
 	__ASSERT_NO_MSG(ret == 0);
 
 	/* alloc buffers and queue them */
-	bsize = fmt.pitch * fmt.height;
-	ret = video_alloc_and_queue_buffers(video_dev, bsize, CONFIG_VIDEO_BUFFER_POOL_ALIGN);
+	ret = video_alloc_and_queue_buffers(video_dev, fmt.size, CONFIG_VIDEO_BUFFER_POOL_ALIGN);
 	__ASSERT_NO_MSG(ret == 0);
 
 	return 0;
@@ -263,7 +258,6 @@ static int video_main_setup(const struct device *const video_dev, uint32_t senso
 static int video_aux_setup(const struct device *const video_dev, uint32_t sensor_width, uint32_t sensor_height)
 {
 	struct video_format fmt;
-	size_t bsize;
 	int ret;
 
 	/* setup crop, compose and output */
@@ -274,13 +268,11 @@ static int video_aux_setup(const struct device *const video_dev, uint32_t sensor
 	fmt.pixelformat = VIDEO_FOURCC_FROM_STR("RGB3");
 	fmt.width = NN_WIDTH;
 	fmt.height = NN_HEIGHT;
-	fmt.pitch = fmt.width * NN_BPP;
 	ret = video_set_format(video_dev, &fmt);
 	__ASSERT_NO_MSG(ret == 0);
 
 	/* alloc buffers and queue them */
-	bsize = fmt.pitch * fmt.height;
-	ret = video_alloc_and_queue_buffers(video_dev, bsize, NPU_BUFFER_POOL_ALIGN);
+	ret = video_alloc_and_queue_buffers(video_dev, fmt.size, NPU_BUFFER_POOL_ALIGN);
 	__ASSERT_NO_MSG(ret == 0);
 
 	return 0;
